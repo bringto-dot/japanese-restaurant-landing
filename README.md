@@ -1,92 +1,69 @@
-# タコとハイボール - Tako to Highball
+# タコとハイボール — Tako to Highball
 
-A single-page site for **Tako to Highball**, a fourteen-seat Japanese counter in
-Moscow. Static: plain HTML, CSS and JavaScript, no build step, no dependencies.
-English and Russian copy ship together behind an EN/RU toggle.
+**[Live demo](https://bringto-dot.github.io/japanese-restaurant-landing/)**
 
-## Sections
+*[Читать на русском](README.ru.md)*
 
-Hero (facade) → the counter → three dishes from the chef → the highball →
-chef, with the video pinned while the copy scrolls → practical visit info →
-reservation → footer.
+A single-page restaurant site, built as a portfolio piece to practice and show
+front-end craft beyond a template: layout, motion, typography, performance and
+i18n, all in plain HTML/CSS/JS with no framework and no build step.
 
-## Design
+The restaurant, the chef, the menu and the address are fictional. The facade
+photo and the three dish photos are real stock photography, used as the content
+to design around.
 
-Off-black, bone white, one red accent, used the same way on every section.
-Noto Serif carries Latin and Cyrillic display type, Noto Serif JP carries the
-Japanese name, and Manrope handles UI and body copy. The two Noto faces come from
-one type system, so switching to Russian never drops into a mismatched fallback.
+![Hero](docs/preview/01-hero.jpg)
 
-Motion is deliberate rather than decorative:
+## What this project demonstrates
 
-- **Line masks.** Headlines slide up from behind their own edge. `js/main.js`
-  wraps each `.mask` in an inner element at runtime, so the markup stays clean.
-- **Uncover.** Photography and video reveal behind a shutter that lifts while the
-  frame settles out of a slight scale, instead of a plain fade.
-- **Pinned chef.** The chef video stays fixed while the copy beside it scrolls past.
-- **Hero drift.** A scroll-linked parallax on the facade via CSS
-  `animation-timeline: scroll()`, desktop only, behind an `@supports` check. It
-  moves only when the page moves, so there is no idle animation loop.
+- **Layout and typography.** A sticky-media/scrolling-copy section for the chef,
+  a two-photo split for the philosophy block, an editorial 3-up grid for the
+  menu, a full-bleed video moment for the drinks. No section repeats the same
+  layout twice. Alegreya (serif) and Manrope (grotesk) carry both English and
+  Russian at full weight, no fallback fonts.
+- **Motion with a reason.** Headlines wipe up from behind their own edge
+  (`.mask`, wrapped at runtime in `js/main.js`). Photos and video reveal behind
+  a shutter that lifts while the frame settles out of a slight zoom, instead of
+  a plain fade. All of it is built on `IntersectionObserver` and CSS
+  transitions/`animation-timeline`, nothing polls `scroll` events, and
+  everything collapses to a static page under `prefers-reduced-motion`.
+- **Real i18n, not a plugin.** Every string ships in both languages via
+  `data-i18n-en` / `data-i18n-ru`; a toggle in the nav swaps `innerHTML` and
+  remembers the choice. No layout breaks, no mismatched font when it switches
+  to Cyrillic.
+- **Performance as a constraint, not an afterthought.** The three video clips
+  are re-encoded (H.264, capped width, faststart, audio stripped since every
+  instance is muted) and only attach their `<source>` once their section is
+  about to scroll into view. Total media on the page is under 10 MB, and only
+  the hero photo loads on first paint.
+- **Front end that behaves like it has a back end.** The reservation form
+  validates, guards against past dates, and swaps in a confirmation state on
+  submit, even though nothing is wired up server-side (documented below, not
+  hidden).
 
-Everything above collapses to a static page under `prefers-reduced-motion`.
+## Screens
 
-## Project structure
+| | |
+|---|---|
+| ![Menu](docs/preview/02-menu.jpg) | ![Highball](docs/preview/03-highball.jpg) |
+| ![Chef](docs/preview/04-chef.jpg) | ![Reservation](docs/preview/05-reservation.jpg) |
 
-```
-index.html         Markup, both languages inline via data-i18n-en / data-i18n-ru
-css/style.css      All styles, custom properties, no framework
-js/main.js         Reveals, nav state, mobile menu, language toggle,
-                    lazy video, reservation form
-assets/img/        Facade, 3 dish photos, 3 video posters, favicon
-assets/video/      3 clips: plating, counter, live fire
-dev-server.py      Local dev server with HTTP range support
-```
+## Stack
 
-Each photo and clip is used in exactly one place on the page. The only repeat is
-`hero-exterior.jpg` in the `og:image` meta tag, which is not rendered on the page.
-
-## Running locally
-
-Any static server works, but video seeking needs HTTP range support, which
-Python's built-in `http.server` does not provide. A small range-enabled server is
-included:
+Plain HTML, CSS and JavaScript. No framework, no build step, no dependencies to
+install. `dev-server.py` is a small local server with HTTP range support,
+needed only because Python's built-in `http.server` can't seek video and the
+built-in one this replaces cannot serve partial content.
 
 ```bash
 python dev-server.py 8080
 ```
 
-Then open `http://localhost:8080`. Production hosts (GitHub Pages, Netlify,
-Vercel) support range requests already, so nothing extra is needed there.
+## Notes for anyone reading the code
 
-## Assets
-
-Every photo and clip was supplied by the client. Video posters are frames pulled
-from their own clip, so a poster never introduces unrelated imagery. All clips are
-re-encoded for the web: H.264, 1600px wide, faststart, audio stripped since every
-instance is muted. Total media weight is roughly 9 MB, and only the facade photo
-loads on first paint. The three clips attach their sources as their section comes
-within range.
-
-## Language toggle
-
-Translatable elements carry `data-i18n-en` and `data-i18n-ru`. `applyLang()` in
-`js/main.js` swaps `innerHTML`, stores the choice in `localStorage`, and updates
-`<html lang>`. Masked headlines are written into their inner wrapper so the reveal
-survives a language switch. To add a string, add both attributes to the element.
-
-## Reservation form
-
-Fully styled and interactive, with validation, a past-date guard and a
-confirmation state, but **not wired to a backend**. Submitting swaps in a
-confirmation panel so the flow can be reviewed end to end. To make it live, point
-the `#res-form` submit handler in `js/main.js` at a booking API, form service or
-serverless function.
-
-## Placeholder content
-
-Invented and to be replaced before launch:
-
-- Chef name and bio: `#chef` in `index.html`
-- Dish names, descriptions and prices: `#menu`
-- Drink list and prices: `#highball`
-- Address, phone, email, hours: `#visit` and the footer
+- The reservation form has no backend. Submitting it shows a confirmation
+  panel client-side; wiring it to a real endpoint is a matter of replacing the
+  `submit` handler in `js/main.js`.
+- All business details (name, chef, address, prices) are placeholders for a
+  fictional concept, written to be internally consistent rather than accurate
+  to any real place.
